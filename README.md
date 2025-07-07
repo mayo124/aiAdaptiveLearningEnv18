@@ -1,6 +1,16 @@
-# Biology Vector Database
+# 🧬 Biology Vector Database
 
-This directory contains a vector database created from the Biology 2e textbook, enabling semantic search across the entire textbook content.
+An intelligent biology learning system that uses vector databases and AI to help students learn biology concepts effectively. This project combines a powerful RAG (Retrieval-Augmented Generation) system with an intuitive web interface.
+
+## ✨ Features
+
+- 🔍 **Vector Database**: Uses Pinecone cloud vector database for efficient similarity search
+- 🤖 **AI-Powered**: Integrates with Groq API for fast, intelligent responses
+- 📚 **Educational Content**: Generates comprehensive biology explanations with learning pathways
+- 🎯 **Interactive MCQs**: Creates multiple-choice questions to test understanding
+- 🌐 **Modern UI**: React interface with ShadCN components and Tailwind CSS
+- ⚡ **Fast Performance**: Cloud-based architecture for scalable responses
+- 🌍 **Multi-language Support**: Built-in language switching capabilities
 
 ## Database Details
 - **Source**: Biology 2e textbook (Biology2e-WEB_ICOFkGu.txt)
@@ -9,14 +19,55 @@ This directory contains a vector database created from the Biology 2e textbook, 
 - **Database**: ChromaDB (persistent storage)
 - **Collection Name**: biology_textbook
 
-## Files in this Directory
-- `chroma.sqlite3` - Main ChromaDB database file
-- `780cc6b5-...` - ChromaDB internal directory
-- `database_info.txt` - Database metadata and creation details
-- `query_biology_db.py` - Python script for simple vector search
-- `biology_rag.py` - **RAG System** - AI-powered Q&A with Ollama integration
-- `start_rag.py` - Quick startup script for the RAG system
-- `README.md` - This documentation file
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- Python 3.8+
+- Pinecone API key
+- Groq API key
+
+### 1. Clone and Setup
+
+```bash
+git clone <your-repo-url>
+cd biologyVectorDatabase
+
+# Copy environment variables
+cp .env.example .env
+# Edit .env and add your API keys
+```
+
+### 2. Install Dependencies
+
+```bash
+# Python dependencies
+pip install -r requirements.txt
+
+# Node.js dependencies
+cd biology-ui
+npm install
+```
+
+### 3. Set Environment Variables
+
+Edit `.env` file:
+```bash
+PINECONE_API_KEY=your_pinecone_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+### 4. Run the Application
+
+```bash
+# From biology-ui directory
+npm run start
+```
+
+This will start:
+- Backend API server on `http://localhost:3001`
+- Frontend React app on `http://localhost:8081`
 
 ## How to Use
 

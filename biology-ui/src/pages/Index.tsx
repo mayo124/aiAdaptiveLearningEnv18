@@ -33,7 +33,7 @@ interface Resource {
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'search' | 'learning'>('search');
-  const [biologyResults, setBiologyResults] = useState<BiologyResult[]>([]);
+  const [biologyResults, setBiologyResults] = useState<BiologyTopicResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { translate } = useLanguage();
