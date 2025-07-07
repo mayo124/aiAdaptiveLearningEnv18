@@ -270,10 +270,17 @@ chroma.sqlite3
 .env
 .env.local
 .env.development
-.env.production
 config/secrets.json
 secrets.json
 api_keys.json
+
+# Allow .env.production as template (no secrets)
+!biology-ui/.env.production
+
+# Exclude log files
+biology-ui/*.log
+backend.log
+frontend.log
 
 # Pinecone and vector database configs
 pinecone_config.json

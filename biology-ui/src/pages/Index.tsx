@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import SearchHeader from '@/components/SearchHeader';
 import ResourceCard from '@/components/ResourceCard';
 import DocumentViewer from '@/components/DocumentViewer';
@@ -7,6 +7,9 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import MCQQuestion from '@/components/MCQQuestion';
 import LearningPathways from '@/components/LearningPathways';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SelectionChatbot } from '@/components/SelectionChatbot';
+import { TopicImageDisplay } from '@/components/TopicImageDisplay';
+import { biologyLearnAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +39,41 @@ const Index = () => {
   const [biologyResults, setBiologyResults] = useState<BiologyTopicResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chatbotVisible, setChatbotVisible] = useState(false);
+  const [mcqCompletedForTopic, setMcqCompletedForTopic] = useState<{ [key: number]: boolean }>({});
   const { translate } = useLanguage();
+  
+  // Refs for auto-scrolling
+  const newContentRef = useRef<HTMLDivElement>(null);
+  const learningPathwaysRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to new content when biology results are added
+  useEffect(() => {
+    if (biologyResults.length > 0 && newContentRef.current) {
+      // Wait a bit longer for content to fully load and render
+      setTimeout(() => {
+        newContentRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }, 500);
+    }
+  }, [biologyResults.length]);
+  
+  // Auto-scroll to learning pathways when they unlock
+  useEffect(() => {
+    const hasAnyCompleted = Object.values(mcqCompletedForTopic).some(completed => completed);
+    if (hasAnyCompleted && learningPathwaysRef.current) {
+      setTimeout(() => {
+        learningPathwaysRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }, 500);
+    }
+  }, [mcqCompletedForTopic]);
 
   // Example biology topics
   const exampleTopics = [
@@ -55,15 +92,7 @@ const Index = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3001/api/biology/learn', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ topic: topic.trim() }),
-      });
-      
-      const data = await response.json();
+      const data = await biologyLearnAPI(topic.trim());
       
       if (data.success) {
         // Add new result to the array instead of replacing
@@ -73,7 +102,7 @@ const Index = () => {
         setError(data.error || 'Failed to get biology content');
       }
     } catch (err) {
-      setError('Failed to connect to the server. Make sure the API is running.');
+      setError('Failed to connect to the server. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,6 +116,15 @@ const Index = () => {
     setCurrentView('search');
     setBiologyResults([]);
     setError(null);
+    setMcqCompletedForTopic({});
+  };
+
+  const handleMcqCompleted = (topicIndex: number) => {
+    setMcqCompletedForTopic(prev => ({ ...prev, [topicIndex]: true }));
+  };
+
+  const handleMcqSkipped = (topicIndex: number) => {
+    setMcqCompletedForTopic(prev => ({ ...prev, [topicIndex]: true }));
   };
 
   if (currentView === 'learning' && biologyResults.length > 0) {
@@ -107,9 +145,13 @@ const Index = () => {
           
           <div className="max-w-4xl mx-auto space-y-8">
             {biologyResults.map((biologyResult, resultIndex) => (
-              <div key={resultIndex} className="space-y-6">
+              <div 
+                key={resultIndex} 
+                className="space-y-6"
+                ref={resultIndex === biologyResults.length - 1 ? newContentRef : null}
+              >
                 {/* Header */}
-                <Card className="border-navy-200">
+                <Card className={`border-navy-200 ${resultIndex === biologyResults.length - 1 ? 'animate-fade-in' : ''}`}>
                   <CardHeader className="bg-gradient-to-r from-navy-600 to-navy-700 text-white rounded-t-lg">
                     <CardTitle className="flex items-center gap-2">
                       <Brain className="h-6 w-6" />
@@ -136,21 +178,47 @@ const Index = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-line select-text">
                       {biologyResult.introduction}
-                    </p>
+                    </div>
                   </CardContent>
                 </Card>
                 
-                {/* Learning Pathways */}
-                <LearningPathways 
-                  pathways={biologyResult.learningPathways} 
-                  onPathwayClick={handleTopicSearch}
+                {/* Visual Learning Images */}
+                <TopicImageDisplay 
+                  topic={biologyResult.topic}
+                  className=""
                 />
                 
                 {/* MCQ Question */}
                 {biologyResult.mcqQuestion && (
-                  <MCQQuestion mcqText={biologyResult.mcqQuestion} />
+                  <MCQQuestion 
+                    mcqText={biologyResult.mcqQuestion} 
+                    onAnswered={() => handleMcqCompleted(resultIndex)}
+                    onSkipped={() => handleMcqSkipped(resultIndex)}
+                  />
+                )}
+                
+                {/* Learning Pathways - Show only after MCQ is completed/skipped */}
+                {mcqCompletedForTopic[resultIndex] ? (
+                  <div ref={learningPathwaysRef}>
+                    <LearningPathways 
+                      pathways={biologyResult.learningPathways} 
+                      onPathwayClick={handleTopicSearch}
+                    />
+                  </div>
+                ) : biologyResult.mcqQuestion && (
+                  <Card className="border-dashed border-2 border-gray-300 bg-gray-50">
+                    <CardContent className="p-6 text-center">
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <BookOpen className="h-5 w-5" />
+                        <span className="font-medium">Learning Pathways Awaiting</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Complete or skip the quiz above to unlock personalized learning recommendations
+                      </p>
+                    </CardContent>
+                  </Card>
                 )}
                 
                 {/* Sources */}
@@ -193,6 +261,12 @@ const Index = () => {
             )}
           </div>
         </div>
+        
+        {/* Selection Chatbot */}
+        <SelectionChatbot
+          isVisible={chatbotVisible}
+          onToggle={() => setChatbotVisible(!chatbotVisible)}
+        />
       </div>
     );
   }
@@ -258,7 +332,9 @@ const Index = () => {
                     <BookOpen className="h-5 w-5" />
                     {topic.title}
                   </CardTitle>
-                  <CardDescription>{topic.description}</CardDescription>
+                  <CardDescription className="select-text">
+                    {topic.description}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Badge variant="secondary" className="bg-cream-200 text-navy-700">
@@ -270,6 +346,12 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* Selection Chatbot */}
+      <SelectionChatbot
+        isVisible={chatbotVisible}
+        onToggle={() => setChatbotVisible(!chatbotVisible)}
+      />
     </div>
   );
 };

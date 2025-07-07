@@ -6,6 +6,8 @@ import { Brain, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 
 interface MCQQuestionProps {
   mcqText: string;
+  onAnswered?: () => void;
+  onSkipped?: () => void;
 }
 
 interface ParsedMCQ {
@@ -15,7 +17,7 @@ interface ParsedMCQ {
   explanation?: string;
 }
 
-const MCQQuestion = ({ mcqText }: MCQQuestionProps) => {
+const MCQQuestion = ({ mcqText, onAnswered, onSkipped }: MCQQuestionProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [parsedMCQ, setParsedMCQ] = useState<ParsedMCQ | null>(null);
@@ -195,7 +197,15 @@ const MCQQuestion = ({ mcqText }: MCQQuestionProps) => {
   const handleSubmit = () => {
     if (selectedAnswer) {
       setShowResult(true);
+      // Call onAnswered callback after a short delay to show the result
+      setTimeout(() => {
+        onAnswered?.();
+      }, 2000);
     }
+  };
+
+  const handleSkip = () => {
+    onSkipped?.();
   };
 
   const handleReset = () => {
@@ -287,25 +297,36 @@ const MCQQuestion = ({ mcqText }: MCQQuestionProps) => {
           </div>
           
           {/* Action Buttons */}
-          <div className="flex gap-2">
-            {!showResult ? (
-              <Button 
-                onClick={handleSubmit} 
-                disabled={!selectedAnswer}
-                className="bg-navy-600 hover:bg-navy-700"
-              >
-                Submit Answer
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleReset} 
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Try Again
-              </Button>
-            )}
+          <div className="flex gap-2 justify-between">
+            <div className="flex gap-2">
+              {!showResult ? (
+                <>
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={!selectedAnswer}
+                    className="bg-navy-600 hover:bg-navy-700"
+                  >
+                    Submit Answer
+                  </Button>
+                  <Button 
+                    onClick={handleSkip} 
+                    variant="outline"
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    ✕ Skip Question
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={handleReset} 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Try Again
+                </Button>
+              )}
+            </div>
           </div>
           
           {/* Result */}
