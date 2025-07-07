@@ -1,0 +1,9 @@
+Biology Vector Database
+======================
+
+Source file: /Users/mihirdhankani/Downloads/Biology2e-WEB_ICOFkGu.txt
+Total chunks: 5675
+Embedding model: all-MiniLM-L6-v2
+Collection name: biology_textbook
+Database path: /Users/mihirdhankani/biologyVectorDatabase
+Created: Sun Jul  6 21:58:16 IST 2025
