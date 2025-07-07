@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  biology-rag:
+    build: .
+    ports:
+      - "8080:8080"  # Frontend
+      - "3001:3001"  # API
+      - "11434:11434"  # Ollama (optional exposure)
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
